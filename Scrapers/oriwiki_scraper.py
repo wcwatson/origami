@@ -110,7 +110,7 @@ try:
     print('Attempting to connect to PostgreSQL...')
     conn = psycopg2.connect(host='localhost', database='origami', user='postgres', password='postgres')
     cur = conn.cursor()
-    sql = "INSERT INTO origami(image_url, image_class, image_file) VALUES ((%image_url), (%image_cat), '(%image_file)')"
+    sql = "INSERT INTO origami(image_url, image_class, image_file) VALUES ((%image_url), (%image_cat), '(%image_file)');"
     # Loop over images
     for image in images:
         # If a meaningful image exists, write to db
@@ -123,4 +123,4 @@ except (Exception, psycopg2.DatabaseError) as error:
 finally:
     if conn is not None:
         conn.close()
-        print('Database connection closed.')
+        print('PostgreSQL connection closed.')
