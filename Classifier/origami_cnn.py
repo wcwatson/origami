@@ -51,6 +51,20 @@ def process_path(file_path, img_size):
     return img, category
 
 
+def compile_and_fit(model, max_epochs=10000):
+    model.compile(optimizer='adam',
+                  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                  metrics=[keras.losses.SparseCategoricalCrossentropy(from_logits=True, name='binary_crossentropy'),
+                           'accuracy'])
+    model.summary()
+    history = model.fit(
+        train_set,
+        #steps_per_epoch = STEPS_PER_EPOCH,
+        epochs=max_epochs,
+        validation_data=val_set,
+        verbose=1)
+    return history
+
 
 # Normalize images and categories
 # TODO: convert to grayscale, standardize dimensions (256x256?), normalize pixel values, convert labels to num categorical
@@ -61,6 +75,9 @@ steps_per_epoch = np.ceil(image_count / batch_size)
 num_cat = 5 #TODO: replace w dynamic function w list or dict
 
 # Segment into train and test sets
+train_set = []
+val_set = []
+test_set = []
 # TODO: fill in, easy enough...
 
 
