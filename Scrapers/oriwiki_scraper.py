@@ -1,14 +1,18 @@
 # Simple scraper to collect some origami images and labels from oriwiki.com
 
+
 # Libraries
 import requests
 from bs4 import BeautifulSoup
 import time
-
+import psycopg2
 from PIL import Image
 from io import BytesIO
 import numpy as np
 import pandas as pd
+
+# Global variables - sue me.
+BASE_URL = 'https://www.oriwiki.com/'
 
 
 # OrigamImage class: for temporary storage of data
@@ -22,16 +26,23 @@ class OrigamImage:
         print('ID: ' + self.id + ' | cat: ' + self.category + ' | img_url: ' + self.img_url)
 
 
-# FETCH RESULTS FROM SEARCH PAGE, STORE IN TEMP STRUCT
+# Function to format results in one cell
+def format_cell(cell, cat):
+    model_id = '0'
+    image_url = 'images/NoModelImage.jpg'
+    # Get model ID
+    if cell.find('a'):
+        model_id = cell.find('a')['href'][22:]
+    # Get image URL
+    if cell.find('img'):
+        image_url = cell.find('img')['src']
+    # Create and return object
+    return OrigamImage(model_id, image_url, cat)
 
-# Search parameters and temp data storage
-base_url = 'https://www.oriwiki.com/'
-image_categories = ['butterfly', 'crane', 'duck', 'frog', 'star']
-images = []
 
-# Loop through image categories, get search results for each
-for cat in image_categories:
-    cat_url = base_url + 'searchresultsModels.php?IC=&ExactWord=&Term1=' + cat + '&Term2=&Term3=&Models=1'
+# Function to fetch search results and insert into data structure
+def scrape_oriwiki_results(cat):
+    cat_url = BASE_URL + 'searchresultsModels.php?IC=&ExactWord=&Term1=' + cat + '&Term2=&Term3=&Models=1'
     # Get search results
     cat_response = requests.get(cat_url)
     time.sleep(0.2)
@@ -43,46 +54,72 @@ for cat in image_categories:
             cells = row.find_all('td')
             # Filter for header row
             if len(cells) > 1:
+                # Append data in each cell to list
                 for cell in cells:
-                    model_id = '0'
-                    image_url = 'images/NoModelImage.jpg'
-                    # Get model ID
-                    if cell.find('a'):
-                        model_id = cell.find('a')['href'][22:]
-                    # Get image URL
-                    if cell.find('img'):
-                        image_url = cell.find('img')['src']
-                    # Create object and add to images
-                    images.append(OrigamImage(model_id, image_url, cat))
+                    images.append(format_cell(cell, cat))
 
-# Check working
-''''''
+
+# Function to process an image url as stored in temporary struct
+def process_url(ext):
+    # Ignore NoModelImage.jpg
+    if ext == 'images/NoModelImage.jpg':
+        url = 'NONE'
+    # Modify to deal with internally hosted images
+    if url[:7] == 'images/':
+        url = BASE_URL + url
+
+
+# Function to write image information to origami database (image guaranteed to be meaningful)
+def write_to_db(cur, sql, image):
+    # Process image URL
+    image_url = process_url(image.img_url)
+    # Get image from URL
+    image_response = requests.get(image_url)
+    time.sleep(0.2)
+    if image_response:
+        image_bytes = BytesIO(image_response.content)
+        image_file = Image.open(image_bytes)
+        # Write to database
+        cur.execute(sql, image_url, image.category, psycopg2.Binary(image_file))
+        conn.commit()
+
+
+
+# FETCH RESULTS FROM SEARCH PAGE, STORE IN TEMP STRUCT
+
+# Set search parameters and temp data storage
+image_categories = ['butterfly', 'crane', 'duck', 'frog', 'star']
+images = []
+# Loop through image categories, get search results for each
+for cat in image_categories:
+    scrape_oriwiki_results(cat)
+# Check for functionality
+'''
 for item in images:
     item.summ()
-''''''
+'''
+print(len(images))
+
 
 # FETCH IMAGES AND WRITE TO POSTGRES
 
-# PostgreSQL cursor
-conn = psycopg2.connect(host='localhost', database='origami', user='postgres', password='postgres')
-cur = conn.cursor()
-
-# Loop over images
-for image in images:
-    # Process image URL
-    image_url = image.img_url
-    # Ignore NoModelImage.jpg, modify to deal with internally hosted images
-    if image_url == 'images/NoModelImage.jpg':
-        image_url = 'NONE'
-    if image_url[:7] == 'images/':
-        image_url = base_url + image_url
-    # Fetch image file if it is meaningful
-    if image_url != 'NONE':
-        image_response = requests.get(image_url)
-        time.sleep(0.2)
-        if image_response:
-            image_bytes = BytesIO(image_response.content)
-            image_file = Image.open(image_bytes)
-            #image_file.show()
-
-
+# Connect to PostgreSQL database
+try:
+    print('Attempting to connect to PostgreSQL...')
+    conn = psycopg2.connect(host='localhost', database='origami', user='postgres', password='postgres')
+    cur = conn.cursor()
+    sql = 'INSERT INTO origami(image_url, image_class, image_file) VALUES (%s, %s, %s)'
+    # Loop over images
+    for image in images:
+        # If a meaningful image exists, write to db
+        image_url = process_url(image.img_url)
+        if image_url != 'NONE':
+            write_to_db(cur, sql, image)
+            print('Wrote image {} ({}) to database.'.format(image.id, image.cat))
+    cur.close()
+except (Exception, psycopg2.DatabaseError) as error:
+    print(error)
+finally:
+    if conn is not None:
+        conn.close()
+        print('Database connection closed.')
