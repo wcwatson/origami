@@ -8,10 +8,8 @@ import time
 import psycopg2
 from PIL import Image
 from io import BytesIO
-import numpy as np
-import pandas as pd
 
-# Global variables - sue me.
+# Global variable - sue me.
 BASE_URL = 'https://www.oriwiki.com/'
 
 
@@ -60,17 +58,19 @@ def scrape_oriwiki_results(cat):
 
 
 # Function to process an image url as stored in temporary struct
-def process_url(ext):
+def process_url(url):
     # Ignore NoModelImage.jpg
-    if ext == 'images/NoModelImage.jpg':
+    if url == 'images/NoModelImage.jpg':
         url = 'NONE'
     # Modify to deal with internally hosted images
     if url[:7] == 'images/':
         url = BASE_URL + url
+    return url
 
 
 # Function to write image information to origami database (image guaranteed to be meaningful)
-def write_to_db(cur, sql, image):
+def write_to_db(conn, cur, sql, image):
+    image_cat = image.category
     # Process image URL
     image_url = process_url(image.img_url)
     # Get image from URL
@@ -79,9 +79,11 @@ def write_to_db(cur, sql, image):
     if image_response:
         image_bytes = BytesIO(image_response.content)
         image_file = Image.open(image_bytes)
-        # Write to database
-        cur.execute(sql, image_url, image.category, psycopg2.Binary(image_file))
-        conn.commit()
+        image_file.show()
+        # Write to database TODO: fix so that it reads image files
+        cur.execute(sql, [image_url, image_cat, image_file])
+        #conn.commit()
+    print('Wrote image {} ({}) to database.'.format(image.id, image.category))
 
 
 
@@ -108,14 +110,13 @@ try:
     print('Attempting to connect to PostgreSQL...')
     conn = psycopg2.connect(host='localhost', database='origami', user='postgres', password='postgres')
     cur = conn.cursor()
-    sql = 'INSERT INTO origami(image_url, image_class, image_file) VALUES (%s, %s, %s)'
+    sql = "INSERT INTO origami(image_url, image_class, image_file) VALUES ((%image_url), (%image_cat), '(%image_file)')"
     # Loop over images
     for image in images:
         # If a meaningful image exists, write to db
         image_url = process_url(image.img_url)
         if image_url != 'NONE':
-            write_to_db(cur, sql, image)
-            print('Wrote image {} ({}) to database.'.format(image.id, image.cat))
+            write_to_db(conn, cur, sql, image)
     cur.close()
 except (Exception, psycopg2.DatabaseError) as error:
     print(error)
