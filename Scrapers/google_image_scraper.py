@@ -1,7 +1,8 @@
 # Scraper for Google Images...why wasn't this the first thing I did?
+# DAMMIT, google_images_download no longer works as of February 2020
 
 # Libraries
-from bing_images_download import googleimagesdownload
+from google_images_download import google_images_download
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -14,7 +15,7 @@ from io import BytesIO
 IMAGE_CATEGORIES = ['butterfly', 'crane', 'duck', 'frog', 'star'] #TODO: make this read in from a file?
 
 # Initialize google scraper, set arguments
-response = googleimagesdownload()
+response = google_images_download.googleimagesdownload()
 limit = 100 #TODO: Expand
 color_type = 'black-and-white'
 for cat in IMAGE_CATEGORIES:

@@ -12,13 +12,13 @@ import h5py
 
 # Read in data from origami database in PostgreSQL
 try:
-    print('Attempting to connect to PostgreSQL...')
+    print('Attempting to connect to PostgreSQL.')
     conn = psycopg2.connect(host='localhost', database='origami', user='postgres', password='postgres')
     cur = conn.cursor()
     # SELECT image classifications and file paths from PostgreSQL
-    sql_select = "SELECT image_class, image_file FROM origami_images;"
+    sql_select = "SELECT image_class, image_path FROM origami_images;"
     cur.execute(sql_select)
-    print('Selecting rows from origami_images table...')
+    print('Selecting rows from origami_images table.')
     origami_images = cur.fetchall()
 except (Exception, psycopg2.DatabaseError) as error:
     print(error)
@@ -27,16 +27,10 @@ finally:
         cur.close()
         conn.close()
         print('PostgreSQL connection closed.')
+#print(origami_images)
 
-
-
-# IMAGE PROCESSING
-
-# Function to get a category from a file path
-def get_cat(file_path):
-    cat = '' #TODO: return once file repository is set up and structure is clear
-    return cat
-
+#TODO: Piece back together from jupyter notebook
+'''
 # Function to decode an image
 def decode_img(img, img_size):
     img = tf.image.decode_image(img, channels=3)
@@ -44,8 +38,9 @@ def decode_img(img, img_size):
     return tf.image.resize(img, [img_size, img_size])
 
 # Function to process a file path and return the image
-def process_path(file_path, img_size):
-    category = get_cat(file_path)
+def process_path(img_tuple, img_size):
+    category = img_tuple[0]
+    file_path = img_tuple[1]
     img = tf.io.read_file(file_path)
     img = decode_img(img, img_size)
     return img, category
@@ -94,4 +89,5 @@ nn.add(keras.layers.Dense(num_cat, activation='softmax'))
 # TODO: train the model on the read-in data, use an automatic stop to prevent overfitting
 
 # Export model for future use
-# TODO: export model to an HDF5 file
+# TODO: export model to pickle
+'''
