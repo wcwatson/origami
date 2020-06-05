@@ -29,65 +29,76 @@ finally:
         print('PostgreSQL connection closed.')
 #print(origami_images)
 
-#TODO: Piece back together from jupyter notebook
-'''
-# Function to decode an image
-def decode_img(img, img_size):
-    img = tf.image.decode_image(img, channels=3)
+# Get list of class names
+class_names = []
+for img in origami_images:
+    if img[0] not in class_names:
+        class_names.append(img[0])
+class_names = np.array(class_names)
+
+# Generate tf Dataset from list of paths
+path_ds = tf.data.Dataset.from_tensor_slices(origami_images)
+
+# Side length of normalized image
+IMG_SIZE = 256
+# AUTOTUNE parameter
+AUTOTUNE = tf.data.experimental.AUTOTUNE
+# Other parameters
+img_count = len(origami_images)
+BATCH_SIZE = 32
+STEPS_PER_EPOCH = np.ceil(img_count/BATCH_SIZE)
+
+# AUXILIARY FUNCTIONS TO PROCESS IMAGES
+# Function to return class label
+def get_label(category):
+    return category == class_names
+
+# Function to decode an image, render in grayscale and square dimensions
+def decode_img(img):
+    img = tf.io.decode_image(img, expand_animations=False)
     img = tf.image.convert_image_dtype(img, tf.float32)
-    return tf.image.resize(img, [img_size, img_size])
+    img = tf.image.rgb_to_grayscale(img)
+    return tf.image.resize(img, [IMG_SIZE, IMG_SIZE])
 
 # Function to process a file path and return the image
-def process_path(img_tuple, img_size):
-    category = img_tuple[0]
+def process_path(img_tuple):
+    # Get label from auxiliary function
+    label = get_label(img_tuple[0])
+    # Decode image using auxiliary function
     file_path = img_tuple[1]
     img = tf.io.read_file(file_path)
-    img = decode_img(img, img_size)
-    return img, category
+    img = decode_img(img)
+    return img, label
+
+# Generate datset of images, batch it
+image_ds = path_ds.map(process_path, num_parallel_calls=AUTOTUNE)
+image_ds = image_ds.batch(BATCH_SIZE)
+image_ds = image_ds.prefetch(1)
 
 
-def compile_and_fit(model, max_epochs=10000):
-    model.compile(optimizer='adam',
-                  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                  metrics=[keras.losses.SparseCategoricalCrossentropy(from_logits=True, name='binary_crossentropy'),
-                           'accuracy'])
-    model.summary()
-    history = model.fit(
-        train_set,
-        #steps_per_epoch = STEPS_PER_EPOCH,
-        epochs=max_epochs,
-        validation_data=val_set,
-        verbose=1)
-    return history
+# DEFINE AND COMPILE MODEL
 
-
-# Normalize images and categories
-# TODO: convert to grayscale, standardize dimensions (256x256?), normalize pixel values, convert labels to num categorical
-image_count = 0 #TODO: replace w function
-batch_size = 32
-std_img_size = 256
-steps_per_epoch = np.ceil(image_count / batch_size)
-num_cat = 5 #TODO: replace w dynamic function w list or dict
-
-# Segment into train and test sets
-train_set = []
-val_set = []
-test_set = []
-# TODO: fill in, easy enough...
-
-
-# Model initialization
+# Model definition
 nn = keras.Sequential()
 # Layer construction w/ L2 regularizers on convolutional layers
-nn.add(keras.layers.Conv2D(64, kernel_size=3, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001),
-                           input_shape=(std_img_size, std_img_size, 1)))
-nn.add(keras.layers.Conv2D(32, kernel_size=3, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)))
+nn.add(keras.layers.Conv2D(64, (3,3), activation='relu', input_shape=(IMG_SIZE, IMG_SIZE, 1)))
+nn.add(keras.layers.MaxPooling2D((2, 2)))
+nn.add(keras.layers.Conv2D(32, (3,3), activation='relu'))
+nn.add(keras.layers.MaxPooling2D((2, 2)))
 nn.add(keras.layers.Flatten())
-nn.add(keras.layers.Dense(num_cat, activation='softmax'))
+nn.add(keras.layers.Dense(16, activation='relu'))
+nn.add(keras.layers.Dense(len(class_names), activation='softmax'))
+
+# Model compilation
+nn.compile(optimizer='adam',
+           loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+           metrics=[keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+                    'categorical_accuracy'])
 
 # Model training
+nn.fit(image_ds, epochs=10)
+
 # TODO: train the model on the read-in data, use an automatic stop to prevent overfitting
 
 # Export model for future use
 # TODO: export model to pickle
-'''

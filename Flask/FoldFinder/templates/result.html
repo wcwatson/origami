@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Result</title>
+</head>
+<body>
+    <h1>Let's get started!</h1>
+    <p>It looks like you want to make a {{ img_class }}.</p>
+    <p>Follow these instructions, and success is within your grasp.</p>
+    <br>
+    {% if instruction_fp %}
+        <p><img src="{{ instruction_fp }}"/></p>
+    {% endif %}
+</body>
+</html>
