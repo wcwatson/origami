@@ -3,6 +3,7 @@
 # NB: This is the code that could be run on my local machine to generate a model, but in actuality was not, because
 # my machine is a 2014 MacBook Air and does NOT have the memory/processing power for that. Google Colab does, and so
 # that's what I used to actually train the thing.
+# TODO: in a future week, actually make this aligne with the model that I end up using
 
 # Libraries
 import numpy as np
