@@ -57,8 +57,6 @@
       </div>
     </nav>
 
-    <br><br>
-
 <!--    MAIN CONTENT OF PAGE    -->
     <div class="container">
 
@@ -68,20 +66,18 @@
         </div>
 
         <div class="starter-template">
-        <div class="row">
-            <div class="col">
+            <div class="container">
                 <form action="/result" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
                         <label>Upload an image to get started.</label>
-                        <div class="custom-file">
-                            <input type="file" class="custom-file-input" name="user_img" id="user_img">
+                        <div class="file-upload-wrapper">
+                            <input type="file" class="file-upload" name="user_img" id="user_img">
                             <label class="custom-file-label" for="user_img">Select file</label>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Get Instructions</button>
                 </form>
             </div>
-        </div>
         </div>
 
         <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
