@@ -49,7 +49,7 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li><a href="#">Home</a></li>
+            <li><a href="/index">Home</a></li>
             <li><a href="/ethics">Ethics</a></li>
             <li><a href="https://www.github.com/wcwatson/origami">github</a></li>
           </ul>
@@ -68,15 +68,15 @@
         </div>
 
         <div class="starter-template">
-            <p><img src="../static/user_img.jpg" alt="Your image." style="display: block; margin-left: auto; margin-right: auto;"/> </p>
+            <img src="../static/user_img.jpg" alt="~your origami image~" width="256" height="256" style="display: block; margin-left: auto; margin-right: auto;"/>
             <br>
             <p>It looks like you want to make a {{ img_class }}.</p>
             <hr>
             <p>These instructions should help you get started.</p>
             <br>
-            <!--    PUT INSTRUCTIONS HERE, MAYBE USE TABLE? -->
+            <img src="{{ instruction_fp }}" alt="~instructions~" width="512" height="512" style="display: block; margin-left: auto; margin-right: auto;"/>
             <hr>
-            <p>If you would like to get instructions for a different piece of origami, <a href="/index">return to the
+            <p>If you would like to get instructions to make a different piece of origami, <a href="/index">return to the
                 home page.</a> </p>
             <br>
             <p>There is a rich discourse concerning the ethics of distributing origami designs over the Internet.
