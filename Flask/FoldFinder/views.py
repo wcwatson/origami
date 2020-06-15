@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from PIL import Image
-import random
+import datetime
 
 # Connect to PostgreSQL
 user = 'wwatson'
@@ -30,7 +30,7 @@ con = None
 con = psycopg2.connect(database=dbname, user=user)
 
 # Spin up models, prepare for user input
-TEMP_IMG_FP = './FoldFinder/static/user_img.jpg'
+USER_IMG_BASE_FP = './FoldFinder/static/user_img_.jpg'
 ori_not_model = tf.keras.models.load_model('../Classifiers/ori_not/ori_not_model.h5')
 origami_classifier = tf.keras.models.load_model('../Classifiers/origami_classifier/origami_classifier.h5')
 origami_classnames = pickle.load(open('../Classifiers/origami_classifier/origami_classnames.p', 'rb'))
@@ -66,12 +66,10 @@ def preprocess_image(img):
 @app.route('/')
 @app.route('/index', methods=['GET', 'POST'])
 def index():
-    if os.path.exists(TEMP_IMG_FP):
-        os.remove(TEMP_IMG_FP)
     return render_template('index.html')
 
 
-# Page giving some information about the ethics of distributing origami designs.
+# Page giving some information about the ethics of distributing origami designs
 @app.route('/ethics')
 def ethics():
     return render_template('ethics.html')
@@ -80,12 +78,14 @@ def ethics():
 # Page(s) to output classification and directions to user
 @app.route('/result', methods=['GET', 'POST'])
 def output_result():
-    # Pull image from input field, temporarily save to static folder
+    # Pull image from input field, generate unique file path, temporarily save to static folder
     user_img = request.files['user_img']
-    user_img.save(TEMP_IMG_FP) #TODO: make resilient to caching
+    user_img_fp = USER_IMG_BASE_FP[:-4] + str(datetime.datetime.now()) + USER_IMG_BASE_FP[-4:]
+    user_img.save(user_img_fp)
+    html_img_fp = '../' + user_img_fp[13:]
     # Read in image, convert to expected input size for modeling
     IMG_SIZE = 128
-    user_img = tf.keras.preprocessing.image.load_img(TEMP_IMG_FP, target_size=(IMG_SIZE, IMG_SIZE))
+    user_img = tf.keras.preprocessing.image.load_img(user_img_fp, target_size=(IMG_SIZE, IMG_SIZE))
     user_img = tf.keras.preprocessing.image.img_to_array(user_img)
     # Convert to grayscale, check that the image is actually of origami
     user_img_gray = tf.expand_dims(tf.repeat(tf.image.rgb_to_grayscale(user_img), repeats=3, axis=2), 0)
@@ -98,7 +98,7 @@ def output_result():
         # Set file path for instructions TODO: update to include links to sites and video
         instruction_fp = '../static/instructions/' + img_class + '/1.jpg'
         # Serve results page with appropriate instructions
-        return render_template('result.html', img_class=img_class, instruction_fp=instruction_fp)
+        return render_template('result.html', image_class=img_class, image_fp=html_img_fp, instruction_fp=instruction_fp)
     # If the image is not origami, proceed to no_result page
     else:
-        return render_template('no_result.html')
+        return render_template('no_result.html', image_fp=html_img_fp)

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--Accepts following variables: [img_class, instruction_fp]-->
+<!--Accepts following variables: [image_class, image_fp, instruction_fp]-->
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -68,9 +68,9 @@
         </div>
 
         <div class="starter-template">
-            <img src="../static/user_img.jpg" alt="~your origami image~" width="256" height="256" style="display: block; margin-left: auto; margin-right: auto;"/>
+            <img src="{{ image_fp }}" alt="~your origami image~" width="256" height="256" style="display: block; margin-left: auto; margin-right: auto;"/>
             <br>
-            <p>It looks like you want to make a {{ img_class }}.</p>
+            <p>It looks like you want to make a {{ image_class }}.</p>
             <hr>
             <p>These instructions should help you get started.</p>
             <br>

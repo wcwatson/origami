@@ -61,7 +61,7 @@
     <div class="container">
 
         <div class="starter-template">
-            <h2>Replicate your favorite origami!</h2>
+            <h2>Pass on the gifts you've received.</h2>
             <hr>
         </div>
 
@@ -69,10 +69,17 @@
             <div class="container">
                 <form action="/result" method="POST" enctype="multipart/form-data">
                     <div class="form-group">
-                        <label>Upload an image to get started.</label>
+                        <label>Upload an image to get started!</label>
                         <div class="file-upload-wrapper">
-                            <input type="file" class="file-upload" name="user_img" id="user_img">
-                            <label class="custom-file-label" for="user_img">Select file</label>
+                            <input type="file" class="file-upload" name="user_img" id="user_img" onchange="loadFile(event)" style="display: none;">
+                            <label class="custom-file-label" for="user_img">Select File</label>
+                            <img id="user_upload" width="256" height="256" style="display: block; margin-left: auto; margin-right: auto;"/>
+                            <script>
+                            var loadFile = function(event) {
+                                var image = document.getElementById('user_upload');
+                                image.src = URL.createObjectURL(event.target.files[0]);
+                            };
+                            </script>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Get Instructions</button>

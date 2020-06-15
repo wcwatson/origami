@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--Accepts no variables-->
+<!--Accepts image_fp-->
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -68,7 +68,7 @@
         </div>
 
         <div class="starter-template">
-            <p><img src="./FoldFinder/static/user_img.jpg" alt="~your image~" width="256" height="256" style="display: block; margin-left: auto; margin-right: auto;"/> </p>
+            <p><img src="{{ image_fp }}" alt="~your image~" width="512" height="512" style="display: block; margin-left: auto; margin-right: auto;"/> </p>
             <p>The image you uploaded does not appear to be of origami.</p>
             <br>
             <p>If it really is origami, please take another picture from a different angle, and <a href="index.html">try again.</a></p>
