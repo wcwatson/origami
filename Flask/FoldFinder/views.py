@@ -12,6 +12,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy_utils import database_exists, create_database
 import tensorflow as tf
+import cv2
 import pickle
 import h5py
 import numpy as np
@@ -34,6 +35,30 @@ ori_not_model = tf.keras.models.load_model('../Classifiers/ori_not/ori_not_model
 origami_classifier = tf.keras.models.load_model('../Classifiers/origami_classifier/origami_classifier.h5')
 origami_classnames = pickle.load(open('../Classifiers/origami_classifier/origami_classnames.p', 'rb'))
 
+# Auxiliary function for image manipulation
+def get_thresholds(img, window_size):
+    m = np.median(img)
+    low = int(max(0, (1.0 - window_size)*m))
+    high = int(min(255, (1.0 + window_size)*m))
+    return [low, high]
+
+# Auxiliary function to process images
+def preprocess_image(img):
+    # Convert to grayscale
+    img = cv2.cvtColor(np.float32(img), cv2.COLOR_RGB2GRAY)
+    # Apply bilateral filtering to remove details of paper design
+    img = cv2.bilateralFilter(img, 5, 50, 50)
+    # Get contours using Canny filter
+    WINDOW_SIZE = 0.2
+    thresholds = get_thresholds(img, WINDOW_SIZE)
+    img = np.float64(cv2.Canny(np.uint8(img), thresholds[0], thresholds[1]))
+    # Repeat along three channels to make acceptable input for ResNet50
+    img = np.array([img])
+    img = img.transpose(1, 2, 0)
+    img = tf.repeat(img, 3, axis=2)
+    img = tf.expand_dims(img, axis=0)
+    return img
+
 
 # APP FUNCTIONALITY
 
@@ -52,12 +77,12 @@ def ethics():
     return render_template('ethics.html')
 
 
-# Page(s) to output classification and directions to user TODO: integrate models
+# Page(s) to output classification and directions to user
 @app.route('/result', methods=['GET', 'POST'])
 def output_result():
     # Pull image from input field, temporarily save to static folder
     user_img = request.files['user_img']
-    user_img.save(TEMP_IMG_FP)
+    user_img.save(TEMP_IMG_FP) #TODO: make resilient to caching
     # Read in image, convert to expected input size for modeling
     IMG_SIZE = 128
     user_img = tf.keras.preprocessing.image.load_img(TEMP_IMG_FP, target_size=(IMG_SIZE, IMG_SIZE))
@@ -67,16 +92,10 @@ def output_result():
     is_origami = ori_not_model.predict_classes(user_img_gray)[0]
     # If if is origami, proceed to normal results page
     if is_origami == 1:
-        # Adjust image colors, predict class TODO: double-check saturation adjustment multipliers
-        user_img_saturated = tf.expand_dims(tf.image.adjust_saturation(user_img, saturation_factor=2.5), 0)
-        img_class = origami_classnames[origami_classifier.predict_classes(user_img_saturated)[0]]
-        ''' NICE IDEA, BUT NO
-        # Fetch appropriate instructions from database
-        sql_query = "SELECT instruction_path FROM origami_instructions WHERE instruction_class = '%s'"%img_class
-        query_result = pd.read_sql_query(sql_query, con)
-        instruction_index = 0 # TODO: random.randint(0, len(query_result))?
-        instruction_fp = query_result.iloc[instruction_index]['instruction_path'] #TODO: adapt for URL if needed
-        '''
+        # Adjust image colors, predict class
+        user_img_processed = preprocess_image(user_img)
+        img_class = origami_classnames[origami_classifier.predict_classes(user_img_processed)[0]]
+        # Set file path for instructions TODO: update to include links to sites and video
         instruction_fp = '../static/instructions/' + img_class + '/1.jpg'
         # Serve results page with appropriate instructions
         return render_template('result.html', img_class=img_class, instruction_fp=instruction_fp)
