@@ -1,0 +1,10 @@
+flask
+tensorflow
+cv2
+pickle
+h5py
+numpy
+pandas
+psycopg2
+PIL
+datetime
