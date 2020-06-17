@@ -8,9 +8,6 @@
 # Libraries
 from flask import render_template, request
 from FoldFinder import app
-import os
-from sqlalchemy import create_engine
-from sqlalchemy_utils import database_exists, create_database
 import tensorflow as tf
 import cv2
 import pickle
@@ -25,7 +22,6 @@ import datetime
 user = 'wwatson'
 host = 'localhost'
 dbname = 'origami'
-db = create_engine('postgres://%s%s/%s'%(user, host, dbname))
 con = None
 con = psycopg2.connect(database=dbname, user=user)
 
@@ -34,6 +30,12 @@ USER_IMG_BASE_FP = './FoldFinder/static/user_img_.jpg'
 ori_not_model = tf.keras.models.load_model('../Classifiers/ori_not/ori_not_model.h5')
 origami_classifier = tf.keras.models.load_model('../Classifiers/origami_classifier/origami_classifier.h5')
 origami_classnames = pickle.load(open('../Classifiers/origami_classifier/origami_classnames.p', 'rb'))
+
+# Auxiliary function to fetch YouTube URL
+def get_youtube_url(img_class):
+    sql_query = "SELECT youtube_url FROM origami_instructions WHERE instruction_class = '" + img_class +"';"
+    url = pd.read_sql_query(sql_query, con).iloc[0, 0]
+    return url
 
 # Auxiliary function for image manipulation
 def get_thresholds(img, window_size):
@@ -95,10 +97,11 @@ def output_result():
         # Adjust image colors, predict class
         user_img_processed = preprocess_image(user_img)
         img_class = origami_classnames[origami_classifier.predict_classes(user_img_processed)[0]]
-        # Set file path for instructions TODO: update to include links to sites and video
+        # Set file path for instructions, fetch YouTube URL from Postgres
         instruction_fp = '../static/instructions/' + img_class + '/1.jpg'
+        yt_url = get_youtube_url(img_class)
         # Serve results page with appropriate instructions
-        return render_template('result.html', image_class=img_class, image_fp=html_img_fp, instruction_fp=instruction_fp)
+        return render_template('result.html', image_class=img_class, image_fp=html_img_fp, instruction_fp=instruction_fp, youtube_url=yt_url)
     # If the image is not origami, proceed to no_result page
     else:
         return render_template('no_result.html', image_fp=html_img_fp)

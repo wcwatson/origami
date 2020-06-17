@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--Accepts following variables: [image_class, image_fp, instruction_fp]-->
+<!--Accepts following variables: [image_class, image_fp, instruction_fp, youtube_url]-->
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -75,9 +75,15 @@
             <p>These instructions should help you get started.</p>
             <br>
             <img src="{{ instruction_fp }}" alt="~instructions~" width="512" height="512" style="display: block; margin-left: auto; margin-right: auto;"/>
+            <br>
+            <p>If you prefer video instruction, check out <a href="{{ youtube_url }}">this YouTube tutorial.</a></p>
+            <br>
+            <p>If you'd like to browse more instructions for making a {{ image_class }}, check out
+                <a href="https://oriwiki.com/searchresultsModels.php?IC=&ExactWord=&Term1={{ image_class }}&Term2=&Term3=&Models=1">
+                    the designs on oriwiki.com.</a></p>
             <hr>
             <p>If you would like to get instructions to make a different piece of origami, <a href="/index">return to the
-                home page.</a> </p>
+                home page.</a></p>
             <br>
             <p>There is a rich discourse concerning the ethics of distributing origami designs over the Internet.
                 To learn more, please visit the <a href="/ethics">ethics page.</a> </p>
