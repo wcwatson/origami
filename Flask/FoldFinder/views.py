@@ -19,7 +19,7 @@ from PIL import Image
 import datetime
 
 # Connect to PostgreSQL
-user = 'wwatson'
+user = 'postgres'
 host = 'localhost'
 dbname = 'origami'
 con = None
