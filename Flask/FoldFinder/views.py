@@ -18,24 +18,31 @@ import psycopg2
 from PIL import Image
 import datetime
 
+'''
+SYNCHRONIZING PSQL VERSIONS IN AWS WAS A (SURPRISING) PAIN, SIMPLER METHOD ADOPTED
 # Connect to PostgreSQL
 user = 'postgres'
 host = 'localhost'
 dbname = 'origami'
 con = None
 con = psycopg2.connect(database=dbname, user=user)
+'''
 
 # Spin up models, prepare for user input
 USER_IMG_BASE_FP = './FoldFinder/static/user_img_.jpg'
 ori_not_model = tf.keras.models.load_model('../Classifiers/ori_not/ori_not_model.h5')
 origami_classifier = tf.keras.models.load_model('../Classifiers/origami_classifier/origami_classifier.h5')
 origami_classnames = pickle.load(open('../Classifiers/origami_classifier/origami_classnames.p', 'rb'))
+yt_urls = pickle.load(open('./FoldFinder/static/instructions/yt_urls.p', 'rb'))
 
+'''
+NOT NECESSARY DUE TO SIMPLIFICATION
 # Auxiliary function to fetch YouTube URL
 def get_youtube_url(img_class):
     sql_query = "SELECT youtube_url FROM origami_instructions WHERE instruction_class = '" + img_class +"';"
     url = pd.read_sql_query(sql_query, con).iloc[0, 0]
     return url
+'''
 
 # Auxiliary function for image manipulation
 def get_thresholds(img, window_size):
@@ -99,7 +106,7 @@ def output_result():
         img_class = origami_classnames[origami_classifier.predict_classes(user_img_processed)[0]]
         # Set file path for instructions, fetch YouTube URL from Postgres
         instruction_fp = '../static/instructions/' + img_class + '/1.jpg'
-        yt_url = get_youtube_url(img_class)
+        yt_url = yt_urls[img_class]
         # Serve results page with appropriate instructions
         return render_template('result.html', image_class=img_class, image_fp=html_img_fp, instruction_fp=instruction_fp, youtube_url=yt_url)
     # If the image is not origami, proceed to no_result page
