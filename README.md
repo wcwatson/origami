@@ -18,4 +18,4 @@ In addition to the model and accompanying Notebook, this subdirectory also conta
 ## Flask
 The `Flask` directory contains the files that run the FoldFinder web app.
 The required packages are listed in `requirements.txt`.
-Most of the inner workings of the app may be found in `/FoldFinder/views.py`, the `/FoldFinder/templates/` subdirectory contains all of the `.html` templates for the app's pages, and the `/FoldFinder/static` subdirectory contains a variety of materials auxiliary to the `.html` files' functionalities.
+Most of the inner workings of the app may be found in `/FoldFinder/views.py`, the `/FoldFinder/templates/` subdirectory contains all of the `.html` templates for the app's pages, and the `/FoldFinder/static/` subdirectory contains a variety of materials auxiliary to the `.html` files' functionalities.
