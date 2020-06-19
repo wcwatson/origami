@@ -1,2 +1,9 @@
 Images
 Scrapers
+origami_cnn.py
+CNN_basic.ipynp
+logs
+.ipynp_checkpoints
+.idea
+Binary Accuracy.svg
+Binary Cross Entropy.svg
