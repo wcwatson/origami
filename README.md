@@ -4,8 +4,6 @@ which classifies user-uploaded photos of origami and provides instructions so th
 
 The app is live on AWS and accessible at [foldfinder.xyz](www.foldfinder.xyz).
 
-For a demo and evaluation of the app, see {YT_link TK}.
-
 ## Classifiers
 The `Classifiers` directory contains the two convolutional neural network models that power the app (stored as `.h5` files), alongside Jupyter Notebooks that walk through the model construction process.
 Note that, due to continued experimentation, the outputs of the Notebooks do not precisely match the final models.
